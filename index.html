@@ -303,6 +303,7 @@ footer { background:#080808; padding:36px 48px; display:flex; align-items:center
 .atab.on { background:var(--ink); color:#fff; }
 .admin-news-list { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
 .admin-news-item { background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.admin-news-item.archived { opacity:.65; background:var(--cream); }
 .ani-score { font-family:'DM Mono',monospace; font-size:13px; font-weight:700; width:54px; flex-shrink:0; }
 .ani-score.red { color:var(--red); }
 .ani-score.amb { color:var(--amber); }
@@ -315,6 +316,9 @@ footer { background:#080808; padding:36px 48px; display:flex; align-items:center
 .btn-edit:hover { background:var(--cream); }
 .btn-del { padding:5px 12px; border-radius:4px; border:1px solid rgba(192,57,43,.3); background:var(--red-light); color:var(--red); font-size:12px; cursor:pointer; font-weight:500; }
 .btn-del:hover { background:var(--red); color:#fff; }
+.btn-restore { padding:5px 12px; border-radius:4px; border:1px solid rgba(30,126,74,.3); background:var(--green-light); color:var(--green); font-size:12px; cursor:pointer; font-weight:500; }
+.btn-restore:hover { background:var(--green); color:#fff; }
+.archived-badge { font-family:'DM Mono',monospace; font-size:10px; background:var(--amber-light); color:var(--amber); padding:2px 8px; border-radius:10px; font-weight:600; }
 .form-card { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
 .form-card-head { background:var(--ink); padding:16px 24px; }
 .form-card-head-title { font-family:'DM Mono',monospace; font-size:11px; color:#E57373; letter-spacing:1.5px; text-transform:uppercase; }
@@ -548,20 +552,29 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
     <div class="config-banner" id="config-banner">
       <strong>⚙️ Configuração necessária</strong>
       Cole a URL do seu Apps Script no arquivo <code>index.html</code> na linha:<br>
-      <code>const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywJKWmamWMZDG-Y7olQy2bUnymUBZt4F60PqLa3Xw7QHL4vUOEvLuoUv4QomQ5FTwI9g/exec';</code><br>
+      <code>const SCRIPT_URL = 'COLE_SUA_URL_AQUI';</code><br>
       Após configurar, este aviso desaparecerá automaticamente.
     </div>
 
+    <!-- 3 abas: Publicadas / Arquivadas / Nova -->
     <div class="admin-tabs">
-      <button class="atab on" id="tab-list" onclick="showTab('list')">📋 Notícias publicadas</button>
-      <button class="atab" id="tab-new" onclick="showTab('new')">➕ Nova notícia</button>
+      <button class="atab on"  id="tab-list"     onclick="showTab('list')">📋 Notícias publicadas</button>
+      <button class="atab"     id="tab-archived" onclick="showTab('archived')">🗄 Arquivadas</button>
+      <button class="atab"     id="tab-new"      onclick="showTab('new')">➕ Nova notícia</button>
     </div>
 
+    <!-- Tab: Publicadas -->
     <div id="tab-content-list">
       <div class="admin-news-list" id="admin-list"></div>
       <button class="btn-primary" onclick="showTab('new');resetForm()">+ Adicionar nova notícia</button>
     </div>
 
+    <!-- Tab: Arquivadas -->
+    <div id="tab-content-archived" style="display:none">
+      <div class="admin-news-list" id="admin-archived-list"></div>
+    </div>
+
+    <!-- Tab: Nova / Editar -->
     <div id="tab-content-new" style="display:none">
       <div class="form-card">
         <div class="form-card-head"><div class="form-card-head-title" id="form-mode-label">Nova Notícia</div></div>
@@ -666,26 +679,24 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
 
 <script>
 // ══════════════════════════════════════════════════════════
-//  ⚙️ CONFIGURAÇÃO — COLE SUA URL AQUI APÓS O PASSO 3
+//  ⚙️ CONFIGURAÇÃO
 // ══════════════════════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywJKWmamWMZDG-Y7olQy2bUnymUBZt4F60PqLa3Xw7QHL4vUOEvLuoUv4QomQ5FTwI9g/exec';
 
-// ── Outras configurações ──
-const ADMIN_PASS   = 'lr@2026!';   // Troque para uma senha segura
+const ADMIN_PASS   = 'lr@2026!';
 const MAX_ATTEMPTS = 3;
 const PESOS = [25, 25, 20, 15, 15];
 const CRIT_NAMES = ['Impacto Operacional','Impacto Jurídico','Potencial de Judicialização','Pressão Sindical / Social','Urgência / Tendência de Evolução'];
 const CARD_GRADIENTS = ['linear-gradient(135deg,#1A2E4A 0%,#2C4870 100%)','linear-gradient(135deg,#2D5016 0%,#4A7C1F 100%)','linear-gradient(135deg,#6B1A1A 0%,#8B2020 100%)','linear-gradient(135deg,#2A1A4A 0%,#4A2870 100%)','linear-gradient(135deg,#1A3A3A 0%,#1F6060 100%)','linear-gradient(135deg,#3A2A1A 0%,#705020 100%)'];
 const CARD_ICONS = ['⚖️','🤱','📋','🏭','📊','⚙️','🏛️','📌'];
 
-// ── Estado ──
 let _data = [];
 let _loginAttempts = 0;
 let _loginBlocked  = false;
 const isConfigured = () => SCRIPT_URL && SCRIPT_URL !== 'COLE_SUA_URL_AQUI';
 
 // ══════════════════════════════════════════════════════════
-//  API — GOOGLE SHEETS
+//  API
 // ══════════════════════════════════════════════════════════
 async function apiGet() {
   if (!isConfigured()) return [];
@@ -694,12 +705,16 @@ async function apiGet() {
   return json.ok ? json.data : [];
 }
 
+async function apiGetArchived() {
+  if (!isConfigured()) return [];
+  const res = await fetch(`${SCRIPT_URL}?action=getArchived`);
+  const json = await res.json();
+  return json.ok ? json.data : [];
+}
+
 async function apiPost(body) {
   if (!isConfigured()) throw new Error('URL não configurada');
-  const res = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(body)
-  });
+  const res = await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify(body) });
   return await res.json();
 }
 
@@ -761,32 +776,23 @@ function doLogin() {
 async function loadAndRender() {
   showLoading(true);
   try {
-    if (isConfigured()) {
-      _data = await apiGet();
-    } else {
-      _data = [];
-    }
+    _data = isConfigured() ? await apiGet() : [];
     renderPublic();
   } catch(e) {
     console.error(e);
     showToast('⚠️ Erro ao carregar notícias. Verifique a URL do Apps Script.', '#D4860A');
-    _data = [];
-    renderPublic();
+    _data = []; renderPublic();
   }
   showLoading(false);
 }
 
 function renderPublic() {
-  renderTicker(_data);
-  renderHeroStats(_data);
-  renderGrid(_data, 'all');
-  renderPainelTitle();
-  renderAlert(_data);
+  renderTicker(_data); renderHeroStats(_data); renderGrid(_data, 'all'); renderPainelTitle(); renderAlert(_data);
 }
 
 function renderTicker(data) {
   const track = document.getElementById('ticker-track');
-  if (!data.length) { track.innerHTML = '<span class="ticker-item">Nenhuma notícia cadastrada ainda. Acesse o painel Admin para adicionar.</span>'; return; }
+  if (!data.length) { track.innerHTML = '<span class="ticker-item">Nenhuma notícia cadastrada ainda.</span>'; return; }
   const items = [...data,...data].map(n => { const sc=scoreClass(n.score); return `<span class="ticker-item"><b>${sc.key.toUpperCase()} ${n.score.toFixed(0)}</b> ${n.title.substring(0,60)}... · ${n.source}</span>`; });
   track.innerHTML = items.join('');
 }
@@ -822,13 +828,9 @@ function renderGrid(data, filter) {
   else if (filter==='moderado') filtered=data.filter(n=>scoreClass(n.score).key==='moderado');
   else if (filter==='baixo') filtered=data.filter(n=>scoreClass(n.score).key==='baixo');
   else if (filter!=='all') filtered=data.filter(n=>n.type===filter);
-
   if (!filtered.length) {
-    if (!isConfigured()) {
-      grid.innerHTML=`<div class="empty-state"><div class="es-icon">⚙️</div><p>Site aguardando configuração</p><small>Adicione a URL do Apps Script e faça o deploy no Vercel.<br>Acesse o Admin para começar a publicar notícias.</small></div>`;
-    } else {
-      grid.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><p>Nenhuma notícia encontrada</p><small>${filter!=='all'?'Tente outro filtro ou adicione notícias no painel Admin.':'Acesse o Admin para publicar a primeira notícia.'}</small></div>`;
-    }
+    if (!isConfigured()) { grid.innerHTML=`<div class="empty-state"><div class="es-icon">⚙️</div><p>Site aguardando configuração</p><small>Adicione a URL do Apps Script e faça o deploy no Vercel.</small></div>`; }
+    else { grid.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><p>Nenhuma notícia encontrada</p><small>${filter!=='all'?'Tente outro filtro ou adicione notícias no painel Admin.':'Acesse o Admin para publicar a primeira notícia.'}</small></div>`; }
     return;
   }
   grid.innerHTML=filtered.map((n,idx)=>{
@@ -937,11 +939,12 @@ function goPublic() {
 }
 
 function showTab(tab) {
-  document.getElementById('tab-list').classList.toggle('on',tab==='list');
-  document.getElementById('tab-new').classList.toggle('on',tab==='new');
-  document.getElementById('tab-content-list').style.display=tab==='list'?'block':'none';
-  document.getElementById('tab-content-new').style.display=tab==='new'?'block':'none';
-  if (tab==='list') renderAdminList();
+  ['list','archived','new'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('on', t===tab);
+    document.getElementById('tab-content-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  if (tab==='list')     renderAdminList();
+  if (tab==='archived') renderArchivedList();
 }
 
 async function renderAdminList() {
@@ -950,9 +953,20 @@ async function renderAdminList() {
   el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Carregando...</div>';
   try {
     _data = await apiGet();
-    if (!_data.length) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Nenhuma notícia cadastrada. Clique em "Nova notícia" para começar.</div>'; return; }
-    el.innerHTML=_data.map(n=>{const sc=scoreClass(n.score);return`<div class="admin-news-item"><span class="ani-score ${sc.bc}">${n.score.toFixed(0)}</span><div class="ani-body"><div class="ani-title">${n.title}</div><div class="ani-meta">${n.source} · ${formatDate(n.date)} · ${n.type}</div></div><div class="ani-actions"><button class="btn-edit" onclick="editNews('${n.id}')">✏ Editar</button><button class="btn-del" onclick="deleteNews('${n.id}')">🗑 Excluir</button></div></div>`;}).join('');
+    if (!_data.length) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Nenhuma notícia publicada. Clique em "Nova notícia" para começar.</div>'; return; }
+    el.innerHTML=_data.map(n=>{const sc=scoreClass(n.score);return`<div class="admin-news-item"><span class="ani-score ${sc.bc}">${n.score.toFixed(0)}</span><div class="ani-body"><div class="ani-title">${n.title}</div><div class="ani-meta">${n.source} · ${formatDate(n.date)} · ${n.type}</div></div><div class="ani-actions"><button class="btn-edit" onclick="editNews('${n.id}')">✏ Editar</button><button class="btn-del" onclick="archiveNews('${n.id}')">🗄 Excluir</button></div></div>`;}).join('');
   } catch(e) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--red);font-size:14px;">Erro ao carregar. Verifique a URL do Apps Script.</div>'; }
+}
+
+async function renderArchivedList() {
+  const el=document.getElementById('admin-archived-list');
+  if (!isConfigured()) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Configure a URL do Apps Script para gerenciar notícias.</div>'; return; }
+  el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Carregando arquivadas...</div>';
+  try {
+    const archived = await apiGetArchived();
+    if (!archived.length) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px;">Nenhuma notícia arquivada ainda.</div>'; return; }
+    el.innerHTML=archived.map(n=>{const sc=scoreClass(n.score);return`<div class="admin-news-item archived"><span class="ani-score ${sc.bc}">${n.score.toFixed(0)}</span><div class="ani-body"><div class="ani-title">${n.title} <span class="archived-badge">arquivada</span></div><div class="ani-meta">${n.source} · ${formatDate(n.date)} · ${n.type}</div></div><div class="ani-actions"><button class="btn-restore" onclick="restoreNews('${n.id}')">↩ Restaurar</button></div></div>`;}).join('');
+  } catch(e) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--red);font-size:14px;">Erro ao carregar arquivadas.</div>'; }
 }
 
 function resetForm() {
@@ -973,6 +987,27 @@ function editNews(id) {
   document.getElementById('f-alerta').value=n.alerta||'nao';
   (n.notas||[5,5,5,5,5]).forEach((v,i)=>{document.getElementById('sl-'+i).value=v;document.getElementById('sv-'+i).textContent=v;});
   calcScore(); showTab('new'); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function archiveNews(id) {
+  if (!confirm('Excluir esta notícia do painel? Ela ficará salva em "Arquivadas" e poderá ser restaurada.')) return;
+  showLoading(true);
+  try {
+    const res=await apiPost({action:'delete', id});
+    if (res.ok) { showToast('🗄 Notícia arquivada. Acesse "Arquivadas" para restaurar.','#7A7267'); await renderAdminList(); }
+    else showToast('⚠️ Erro ao arquivar.','#D4860A');
+  } catch(e) { showToast('⚠️ Erro de conexão.','#D4860A'); }
+  showLoading(false);
+}
+
+async function restoreNews(id) {
+  showLoading(true);
+  try {
+    const res=await apiPost({action:'restore', id});
+    if (res.ok) { showToast('✓ Notícia restaurada e publicada novamente!'); await renderArchivedList(); }
+    else showToast('⚠️ Erro ao restaurar.','#D4860A');
+  } catch(e) { showToast('⚠️ Erro de conexão.','#D4860A'); }
+  showLoading(false);
 }
 
 async function saveNews() {
@@ -1000,17 +1035,6 @@ async function saveNews() {
   showLoading(false);
 }
 
-async function deleteNews(id) {
-  if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
-  showLoading(true);
-  try {
-    const res=await apiPost({action:'delete', id});
-    if (res.ok) { showToast('🗑 Notícia excluída.','#7A7267'); await renderAdminList(); }
-    else showToast('⚠️ Erro ao excluir.','#D4860A');
-  } catch(e) { showToast('⚠️ Erro de conexão.','#D4860A'); }
-  showLoading(false);
-}
-
 function calcScore() {
   const notas=[0,1,2,3,4].map(i=>{const v=parseInt(document.getElementById('sl-'+i).value);document.getElementById('sv-'+i).textContent=v;return v;});
   const s=computeScore(notas); const sc=scoreClass(s);
@@ -1021,9 +1045,11 @@ function calcScore() {
 
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeDetail();closeAlertas();closeRelatorios();closeSolicitarAcesso();cancelLogin();} });
 
-// ── Init ──
 calcScore();
 loadAndRender();
 </script>
 </body>
 </html>
+
+
+
