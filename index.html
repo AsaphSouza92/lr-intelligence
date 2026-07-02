@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>L&R Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- RT NEWS v1.1 — Chart.js para Dashboard Executivo -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
   --ink: #0D0D0D;
@@ -366,6 +368,136 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
 .toast { position:fixed; bottom:28px; right:28px; background:var(--green); color:#fff; padding:12px 22px; border-radius:8px; font-size:14px; font-weight:500; z-index:9999; display:none; box-shadow:0 8px 24px rgba(0,0,0,.2); max-width:calc(100vw - 56px); animation:toastIn .3s ease; }
 @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
+/* ===== RT NEWS v1.1 — SPRINT 1: CENTRO DE COMPARTILHAMENTO ===== */
+.share-wrap { position:relative; display:inline-block; }
+.share-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 18px; border-radius:6px; border:1px solid var(--border);
+  background:#fff; color:var(--accent); font-size:13px; font-weight:600;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+  white-space:nowrap;
+}
+.share-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+.share-menu {
+  display:none; position:absolute; bottom:calc(100% + 8px); right:0;
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  box-shadow:0 12px 40px rgba(0,0,0,.18); min-width:190px; overflow:hidden;
+  z-index:999; animation:suFast .15s ease;
+}
+.share-menu.open { display:block; }
+@keyframes suFast { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.share-menu-hd {
+  background:var(--ink); padding:10px 16px;
+  font-family:'DM Mono',monospace; font-size:10px; color:#888;
+  text-transform:uppercase; letter-spacing:1.5px;
+}
+.share-menu-item {
+  display:flex; align-items:center; gap:10px; padding:11px 16px;
+  font-size:13px; font-weight:500; color:var(--ink); cursor:pointer;
+  border-bottom:1px solid var(--cream); transition:background .12s;
+  background:none; border-left:none; border-right:none; border-top:none;
+  width:100%; text-align:left; font-family:'DM Sans',sans-serif;
+}
+.share-menu-item:last-child { border-bottom:none; }
+.share-menu-item:hover { background:var(--accent-light); color:var(--accent); }
+.share-menu-item .smi-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+.share-menu-item .smi-soon {
+  margin-left:auto; font-family:'DM Mono',monospace; font-size:9px;
+  color:var(--muted); background:var(--cream); padding:2px 6px; border-radius:10px;
+}
+
+/* ── Print styles ── */
+@media print {
+  body > *:not(#print-area) { display:none !important; }
+  #print-area { display:block !important; }
+}
+#print-area { display:none; }
+
+/* ===== RT NEWS v1.1 — SPRINT 2: DASHBOARD EXECUTIVO ===== */
+#modal-dashboard-bg {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.65);
+  z-index:400; align-items:center; justify-content:center; backdrop-filter:blur(4px);
+}
+#modal-dashboard-bg.open { display:flex; animation:fi .2s; }
+.dash-modal {
+  background:var(--paper); border-radius:12px; width:96%; max-width:900px;
+  max-height:92vh; overflow-y:auto; box-shadow:0 32px 80px rgba(0,0,0,.4);
+  animation:su .3s;
+}
+.dash-hd {
+  background:var(--ink); padding:22px 28px; display:flex; align-items:center;
+  justify-content:space-between; border-radius:12px 12px 0 0;
+  position:sticky; top:0; z-index:10; border-bottom:2px solid var(--red);
+}
+.dash-hd-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:#fff; }
+.dash-hd-sub { font-family:'DM Mono',monospace; font-size:10px; color:#555; letter-spacing:1.5px; margin-top:3px; }
+.dash-close { background:rgba(255,255,255,.1); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px; color:#ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.dash-close:hover { background:rgba(255,255,255,.2); color:#fff; }
+.dash-bd { padding:28px; display:flex; flex-direction:column; gap:24px; }
+
+/* KPIs */
+.dash-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.dash-kpi {
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:18px 16px; text-align:center; position:relative; overflow:hidden;
+}
+.dash-kpi::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+}
+.dash-kpi.kpi-total::before { background:var(--accent); }
+.dash-kpi.kpi-alert::before { background:var(--red); }
+.dash-kpi.kpi-score::before { background:var(--amber); }
+.dash-kpi.kpi-week::before  { background:var(--green); }
+.dash-kpi-num { font-family:'Playfair Display',serif; font-size:32px; font-weight:900; line-height:1; margin-bottom:6px; }
+.dash-kpi.kpi-total .dash-kpi-num { color:var(--accent); }
+.dash-kpi.kpi-alert .dash-kpi-num { color:var(--red); }
+.dash-kpi.kpi-score .dash-kpi-num { color:var(--amber); }
+.dash-kpi.kpi-week  .dash-kpi-num { color:var(--green); }
+.dash-kpi-lbl { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+/* Seções do dashboard */
+.dash-section-title {
+  font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase;
+  letter-spacing:2px; color:var(--muted); margin-bottom:14px;
+  display:flex; align-items:center; gap:10px;
+}
+.dash-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* Grid de gráficos */
+.dash-charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.dash-chart-box {
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:20px; display:flex; flex-direction:column; gap:14px;
+}
+.dash-chart-box.full { grid-column:1/-1; }
+.dash-chart-title { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink); font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+.dash-chart-canvas { position:relative; width:100%; }
+
+/* Barras de distribuição de risco */
+.dash-risk-bars { display:flex; flex-direction:column; gap:10px; }
+.dash-risk-row { display:flex; align-items:center; gap:12px; }
+.dash-risk-lbl { font-size:12px; font-weight:600; width:80px; flex-shrink:0; }
+.dash-risk-bar-wrap { flex:1; height:10px; background:var(--cream); border-radius:6px; overflow:hidden; }
+.dash-risk-bar-fill { height:100%; border-radius:6px; transition:width .5s ease; }
+.dash-risk-count { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:30px; text-align:right; flex-shrink:0; }
+
+/* Fontes top */
+.dash-sources-list { display:flex; flex-direction:column; gap:8px; }
+.dash-source-row { display:flex; align-items:center; gap:10px; }
+.dash-source-rank { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); width:18px; flex-shrink:0; }
+.dash-source-name { font-size:13px; font-weight:500; flex:1; }
+.dash-source-bar-wrap { width:100px; height:6px; background:var(--cream); border-radius:4px; overflow:hidden; }
+.dash-source-bar-fill { height:100%; border-radius:4px; background:var(--accent); }
+.dash-source-count { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:24px; text-align:right; flex-shrink:0; }
+
+/* Responsivo dashboard */
+@media(max-width:700px) {
+  .dash-kpis { grid-template-columns:1fr 1fr; }
+  .dash-charts-grid { grid-template-columns:1fr; }
+  .dash-chart-box.full { grid-column:1; }
+  .dash-bd { padding:16px; gap:18px; }
+}
+
 /* ── SOLICITAR ACESSO ── */
 #modal-acesso-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
 
@@ -461,6 +593,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
       <li><a onclick="navPainel()">Painel</a></li>
       <li><a onclick="openAlertas()">Alertas</a></li>
       <li><a onclick="openRelatorios()">Relatórios</a></li>
+      <li><a onclick="openDashboard()">📊 Dashboard</a></li>
       <li><a class="nav-admin-btn" onclick="openLogin()">⚙ Admin</a></li>
     </ul>
     <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -471,6 +604,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
     <a onclick="navPainel();closeMenu()">Painel</a>
     <a onclick="openAlertas();closeMenu()">Alertas</a>
     <a onclick="openRelatorios();closeMenu()">Relatórios</a>
+    <a onclick="openDashboard();closeMenu()">📊 Dashboard</a>
     <a class="nav-admin-btn" onclick="openLogin();closeMenu()">⚙ Admin</a>
   </div>
 
@@ -674,6 +808,23 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
   <div class="modal" id="modal-detail-inner"></div>
 </div>
 
+<!-- ===== RT NEWS v1.1 — MODAL DASHBOARD EXECUTIVO ===== -->
+<div id="modal-dashboard-bg" onclick="if(event.target===this)closeDashboard()">
+  <div class="dash-modal">
+    <div class="dash-hd">
+      <div>
+        <div class="dash-hd-title">📊 Dashboard Executivo</div>
+        <div class="dash-hd-sub">L&R INTELLIGENCE · RT NEWS V1 · VISÃO GERENCIAL</div>
+      </div>
+      <button class="dash-close" onclick="closeDashboard()">✕</button>
+    </div>
+    <div class="dash-bd" id="dash-bd"></div>
+  </div>
+</div>
+
+<!-- ===== RT NEWS v1.1 — ÁREA DE IMPRESSÃO ===== -->
+<div id="print-area"></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -875,7 +1026,22 @@ function openDetail(id) {
       ${acoes.length?`<div class="msec"><div class="msec-ttl">Ações Recomendadas</div><ul class="mlist">${acoes.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
       ${n.risco?`<div class="mrisk"><strong>⚠️ Risco Potencial:</strong> ${n.risco}</div>`:''}
     </div>
-    <div class="modal-ft"><div class="kws">${kws.map(k=>`<span class="kw">${k}</span>`).join('')}</div>${n.link?`<a href="${n.link}" target="_blank" class="src-link">Fonte original ↗</a>`:''}</div>`;
+    <div class="modal-ft">
+      <div class="kws">${kws.map(k=>`<span class="kw">${k}</span>`).join('')}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        ${n.link?`<a href="${n.link}" target="_blank" class="src-link">Fonte original ↗</a>`:''}
+        <div class="share-wrap" id="share-wrap-${n.id}">
+          <button class="share-btn" onclick="toggleShareMenu('${n.id}')">📤 Compartilhar ▾</button>
+          <div class="share-menu" id="share-menu-${n.id}">
+            <div class="share-menu-hd">Compartilhar notícia</div>
+            <button class="share-menu-item" onclick="exportPDF('${n.id}')"><span class="smi-icon">📄</span> Exportar PDF</button>
+            <button class="share-menu-item" onclick="copyText('${n.id}')"><span class="smi-icon">📋</span> Copiar Texto</button>
+            <button class="share-menu-item" onclick="printNews('${n.id}')"><span class="smi-icon">🖨️</span> Imprimir</button>
+            <button class="share-menu-item" style="opacity:.5;cursor:not-allowed;" disabled><span class="smi-icon">📝</span> Word <span class="smi-soon">Em breve</span></button>
+          </div>
+        </div>
+      </div>
+    </div>`;
   document.getElementById('modal-detail').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1043,7 +1209,735 @@ function calcScore() {
   spc.textContent=sc.label; spc.className='sp-class '+sc.css;
 }
 
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeDetail();closeAlertas();closeRelatorios();closeSolicitarAcesso();cancelLogin();} });
+// ══════════════════════════════════════════════════════════
+// ===== RT NEWS v1.1 — SPRINT 1: CENTRO DE COMPARTILHAMENTO =====
+// ══════════════════════════════════════════════════════════
+
+// ── Abre/fecha menu de compartilhamento ──
+function toggleShareMenu(id) {
+  const menu = document.getElementById('share-menu-'+id);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  // fecha todos os outros menus abertos
+  document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen) menu.classList.add('open');
+}
+
+// Fecha menu ao clicar fora
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.share-wrap')) {
+    document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// ── Busca notícia por id na memória ──
+function _getNewsById(id) { return _data.find(x => String(x.id) === String(id)) || null; }
+
+// ── Gera texto inteligente formatado para Teams / Outlook ──
+function _buildNewsText(n) {
+  const sc    = scoreClass(n.score);
+  const acoes = (n.acoes||'').split('\n').filter(Boolean);
+  const hoje  = new Date().toLocaleDateString('pt-BR');
+  const linhas = [
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '  L&R Intelligence · RT NEWS V1',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '',
+    `${n.title}`,
+    '',
+    `📌 ${n.source}  ·  ${formatDate(n.date)}  ·  ${n.type}`,
+    n.alerta === 'sim' ? '⚠️  ALERTA RT NEWS ATIVO' : '',
+    '',
+    '── Resumo Executivo ─────────────',
+    n.resumo || '',
+    '',
+    `── Score RT NEWS ────────────────`,
+    `${n.score.toFixed(1)} / 100`,
+    '',
+    `── Impacto ──────────────────────`,
+    sc.label.replace(/[🔴🟡🟢]\s*/,''),
+    '',
+  ];
+  if (n.justificativa) {
+    linhas.push('── Justificativa ────────────────', n.justificativa, '');
+  }
+  if (acoes.length) {
+    linhas.push('── Ações Recomendadas ───────────');
+    acoes.forEach((a,i) => linhas.push(`${i+1}. ${a}`));
+    linhas.push('');
+  }
+  if (n.risco) {
+    linhas.push('── Risco Potencial ──────────────', n.risco, '');
+  }
+  if (n.link) {
+    linhas.push('── Fonte ────────────────────────', n.link, '');
+  }
+  linhas.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  linhas.push(`Gerado por L&R Intelligence · ${hoje}`);
+  linhas.push('https://l-r-intelligence.vercel.app');
+  return linhas.filter(l => l !== undefined).join('\n');
+}
+
+// ── EXPORTAR PDF ──
+// ===== RT NEWS v1.2 — EXPORTAR PDF: NOTA TÉCNICA CORPORATIVA =====
+function exportPDF(id) {
+  const n = _getNewsById(id);
+  if (!n) return;
+  document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+
+  const sc    = scoreClass(n.score);
+  const acoes = (n.acoes||'').split('\n').filter(Boolean);
+  const kws   = (n.keywords||'').split(',').map(k=>k.trim()).filter(Boolean);
+  const hoje  = new Date().toLocaleDateString('pt-BR');
+  const hojeISO = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Paleta de cores
+  const C = {
+    ink:    [13,13,13],
+    red:    [192,57,43],
+    accent: [26,46,74],
+    muted:  [122,114,103],
+    cream:  [237,233,223],
+    paper:  [245,242,236],
+    border: [214,208,196],
+    white:  [255,255,255],
+  };
+  const scoreRGB = n.score>=70 ? C.red : n.score>=40 ? [212,134,10] : [30,126,74];
+  const scoreHex = n.score>=70 ? '#C0392B' : n.score>=40 ? '#D4860A' : '#1E7E4A';
+
+  // Carrega jsPDF dinamicamente
+  const loadJsPDF = () => new Promise((resolve, reject) => {
+    if (window.jspdf) { resolve(window.jspdf.jsPDF); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => resolve(window.jspdf.jsPDF);
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+
+  showToast('Gerando nota técnica...', '#1A2E4A');
+
+  loadJsPDF().then(jsPDF => {
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const W=210, M=18, TW=W-M*2;
+    let y=0;
+
+    // ─────────────────────────────────────────
+    // CABEÇALHO COMPLETO
+    // ─────────────────────────────────────────
+    // Fundo preto completo do topo
+    doc.setFillColor(...C.ink);
+    doc.rect(0, 0, W, 52, 'F');
+    // Barra vermelha decorativa
+    doc.setFillColor(...C.red);
+    doc.rect(0, 52, W, 2.5, 'F');
+    // Linha lateral esquerda colorida
+    doc.setFillColor(...C.red);
+    doc.rect(0, 0, 4, 52, 'F');
+
+    // Brand
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(20); doc.setTextColor(...C.white);
+    doc.text('L&R Intelligence', M+4, 19);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9); doc.setTextColor(180,180,180);
+    doc.text('Portal RT NEWS · Inteligência Trabalhista Preventiva', M+4, 27);
+
+    // Separador fino
+    doc.setDrawColor(50,50,50); doc.setLineWidth(0.3);
+    doc.line(M+4, 31, W-M, 31);
+
+    // Metadados do documento no cabeçalho
+    doc.setFontSize(8); doc.setTextColor(140,140,140);
+    doc.text(`Nota Técnica · ${n.type}`, M+4, 38);
+    doc.text(`Emitido em ${hojeISO}`, M+4, 44);
+
+    // Badge ALERTA no canto direito
+    if (n.alerta === 'sim') {
+      doc.setFillColor(...C.red);
+      doc.roundedRect(W-M-40, 16, 40, 14, 2, 2, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.white);
+      doc.text('⚠  ALERTA RT NEWS', W-M-37, 22);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(255,180,180);
+      doc.text('Ação imediata recomendada', W-M-37, 27);
+    }
+
+    y = 64;
+
+    // ─────────────────────────────────────────
+    // TÍTULO DA NOTÍCIA
+    // ─────────────────────────────────────────
+    doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(...C.ink);
+    const titleLines = doc.splitTextToSize(n.title, TW);
+    doc.text(titleLines, M, y);
+    y += titleLines.length * 7.5 + 4;
+
+    // Linha decorativa sob o título
+    doc.setDrawColor(...C.red); doc.setLineWidth(0.8);
+    doc.line(M, y, M+40, y);
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.3);
+    doc.line(M+40, y, M+TW, y);
+    y += 10;
+
+    // ─────────────────────────────────────────
+    // PAINEL DE METADADOS (2 colunas)
+    // ─────────────────────────────────────────
+    doc.setFillColor(...C.paper);
+    doc.roundedRect(M, y, TW, 26, 2, 2, 'F');
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
+    doc.roundedRect(M, y, TW, 26, 2, 2, 'S');
+
+    const half = TW/2;
+    const metas2 = [
+      [['FONTE', n.source||'—'], ['DATA', formatDate(n.date)||'—']],
+      [['TIPO', n.type||'—'],   ['ALERTA RT NEWS', n.alerta==='sim'?'SIM — Ação recomendada':'NÃO']],
+    ];
+    metas2.forEach(([esq, dir], row) => {
+      const ry = y + 8 + row * 12;
+      // Esquerda
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.muted);
+      doc.text(esq[0], M+5, ry);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.setTextColor(n.alerta==='sim' && esq[0]==='ALERTA RT NEWS' ? C.red : C.ink);
+      doc.text(doc.splitTextToSize(esq[1], half-10)[0], M+5, ry+5);
+      // Direita
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...C.muted);
+      doc.text(dir[0], M+half+5, ry);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.setTextColor(n.alerta==='sim' && dir[0]==='ALERTA RT NEWS' ? C.red : C.ink);
+      doc.text(doc.splitTextToSize(dir[1], half-10)[0], M+half+5, ry+5);
+    });
+    // Divisor vertical
+    doc.setDrawColor(...C.border); doc.setLineWidth(0.25);
+    doc.line(M+half, y+4, M+half, y+22);
+    y += 34;
+
+    // ─────────────────────────────────────────
+    // SCORE RT NEWS — bloco de destaque
+    // ─────────────────────────────────────────
+    doc.setFillColor(...C.ink);
+    doc.roundedRect(M, y, TW, 28, 2, 2, 'F');
+    // Borda lateral colorida
+    doc.setFillColor(...scoreRGB);
+    doc.roundedRect(M, y, 4, 28, 1, 1, 'F');
+
+    // Label
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(140,140,140);
+    doc.text('SCORE DE RISCO  ·  RT NEWS V1', M+8, y+8);
+
+    // Número grande
+    doc.setFont('helvetica','bold'); doc.setFontSize(26); doc.setTextColor(...scoreRGB);
+    doc.text(`${n.score.toFixed(1)}`, M+8, y+22);
+
+    // / 100
+    doc.setFont('helvetica','normal'); doc.setFontSize(12); doc.setTextColor(80,80,80);
+    const scoreNumW = doc.getTextWidth(`${n.score.toFixed(1)}`);
+    doc.text('/ 100', M+8+scoreNumW+2, y+22);
+
+    // Classificação
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...scoreRGB);
+    doc.text(sc.label.replace(/[🔴🟡🟢]\s*/,''), M+8+scoreNumW+22, y+22);
+
+    // Barra de progresso
+    const barX=M+TW*0.45, barW=TW*0.5, barY=y+14;
+    doc.setFillColor(40,40,40); doc.roundedRect(barX, barY, barW, 6, 2, 2, 'F');
+    doc.setFillColor(...scoreRGB); doc.roundedRect(barX, barY, barW*(n.score/100), 6, 2, 2, 'F');
+
+    // Escala embaixo da barra
+    doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(80,80,80);
+    doc.text('0', barX, barY+11);
+    doc.text('40', barX+barW*0.4-2, barY+11);
+    doc.text('70', barX+barW*0.7-2, barY+11);
+    doc.text('100', barX+barW-5, barY+11);
+    y += 36;
+
+    // ─────────────────────────────────────────
+    // FUNÇÕES AUXILIARES DE SEÇÃO
+    // ─────────────────────────────────────────
+    const checkPage = (needed=15) => {
+      if (y + needed > 272) { doc.addPage(); y = 20; }
+    };
+
+    const sectionTitle = (title) => {
+      checkPage(14);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...C.muted);
+      doc.text(title.toUpperCase(), M, y);
+      const tw = doc.getTextWidth(title.toUpperCase());
+      doc.setDrawColor(...C.red); doc.setLineWidth(0.6);
+      doc.line(M, y+1.5, M+tw+2, y+1.5);
+      doc.setDrawColor(...C.border); doc.setLineWidth(0.2);
+      doc.line(M+tw+2, y+1.5, M+TW, y+1.5);
+      y += 7;
+    };
+
+    const sectionText = (text) => {
+      if (!text) return;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.ink);
+      const lines = doc.splitTextToSize(text, TW);
+      lines.forEach(l => { checkPage(6); doc.text(l, M, y); y += 5.5; });
+      y += 4;
+    };
+
+    // ─────────────────────────────────────────
+    // SEÇÕES DE CONTEÚDO
+    // ─────────────────────────────────────────
+    sectionTitle('Resumo Executivo');
+    sectionText(n.resumo);
+
+    sectionTitle('Justificativa de Impacto');
+    sectionText(n.justificativa);
+
+    // Ações recomendadas
+    if (acoes.length) {
+      sectionTitle('Ações Recomendadas');
+      acoes.forEach((a, i) => {
+        checkPage(10);
+        // Número em círculo vermelho
+        doc.setFillColor(...C.red);
+        doc.circle(M+2.5, y-1.2, 2.5, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.white);
+        doc.text(`${i+1}`, M+2.5-(i<9?1:2), y-0.4);
+        // Texto da ação
+        doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.ink);
+        const lines = doc.splitTextToSize(a, TW-10);
+        lines.forEach((l,li) => { checkPage(6); doc.text(l, M+8, y+(li*5.5)); });
+        y += lines.length*5.5+3;
+      });
+      y += 2;
+    }
+
+    // Risco Potencial — caixa destacada
+    if (n.risco) {
+      checkPage(20);
+      sectionTitle('Risco Potencial');
+      doc.setFillColor(253,236,234);
+      const riscoLines = doc.splitTextToSize(n.risco, TW-10);
+      const boxH = riscoLines.length*5.5+10;
+      doc.roundedRect(M, y-2, TW, boxH, 2, 2, 'F');
+      doc.setDrawColor(...C.red); doc.setLineWidth(0.3);
+      doc.roundedRect(M, y-2, TW, boxH, 2, 2, 'S');
+      doc.setFillColor(...C.red); doc.roundedRect(M, y-2, 3, boxH, 1,1,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.ink);
+      riscoLines.forEach(l => { doc.text(l, M+7, y+3); y += 5.5; });
+      y += 8;
+    }
+
+    // Palavras-chave
+    if (kws.length) {
+      checkPage(14);
+      sectionTitle('Palavras-chave');
+      let kx = M;
+      kws.forEach(k => {
+        const kw = k.trim();
+        const kw_w = doc.getTextWidth(kw)+8;
+        if (kx + kw_w > M+TW) { kx=M; y+=8; }
+        doc.setFillColor(...C.accent);
+        doc.roundedRect(kx, y-4, kw_w, 7, 1.5,1.5,'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...C.white);
+        doc.text(kw, kx+4, y+0.5);
+        kx += kw_w+3;
+      });
+      y += 10;
+    }
+
+    // Fonte original
+    if (n.link) {
+      checkPage(12);
+      sectionTitle('Fonte Original');
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...C.accent);
+      doc.textWithLink(n.link, M, y, { url: n.link });
+      y += 8;
+    }
+
+    // ─────────────────────────────────────────
+    // RODAPÉ EM TODAS AS PÁGINAS
+    // ─────────────────────────────────────────
+    const pages = doc.getNumberOfPages();
+    for (let p=1; p<=pages; p++) {
+      doc.setPage(p);
+      // Faixa vermelha + preta
+      doc.setFillColor(...C.red); doc.rect(0, 284, 4, 13, 'F');
+      doc.setFillColor(...C.ink); doc.rect(4, 284, W-4, 13, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...C.white);
+      doc.text('L&R Intelligence', 8, 291.5);
+      doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
+      doc.text('· RT NEWS V1 · Nota Técnica · Gerado automaticamente', 8+doc.getTextWidth('L&R Intelligence')+1, 291.5);
+      doc.text(`${hoje}  ·  Pág. ${p}/${pages}`, W-M, 291.5, {align:'right'});
+    }
+
+    const filename = `LR_NTecnica_${(n.title||'noticia').substring(0,28).replace(/[^a-zA-Z0-9]/g,'_')}.pdf`;
+    doc.save(filename);
+    showToast('✓ Nota técnica gerada!');
+  }).catch(e => { console.error(e); showToast('⚠️ Erro ao gerar PDF.','#D4860A'); });
+}
+
+// ── COPIAR TEXTO ──
+function copyText(id) {
+  const n = _getNewsById(id);
+  if (!n) return;
+  document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+  const texto = _buildNewsText(n);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto)
+      .then(() => showToast('✓ Texto copiado com sucesso!'))
+      .catch(() => _copyFallback(texto));
+  } else { _copyFallback(texto); }
+}
+
+function _copyFallback(texto) {
+  const ta = document.createElement('textarea');
+  ta.value = texto; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast('✓ Texto copiado com sucesso!'); }
+  catch { showToast('⚠️ Não foi possível copiar automaticamente.', '#D4860A'); }
+  document.body.removeChild(ta);
+}
+
+// ── IMPRIMIR ──
+function printNews(id) {
+  const n = _getNewsById(id);
+  if (!n) return;
+  document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+  const sc    = scoreClass(n.score);
+  const acoes = (n.acoes||'').split('\n').filter(Boolean);
+  const kws   = (n.keywords||'').split(',').map(k=>k.trim()).filter(Boolean);
+  const hoje  = new Date().toLocaleDateString('pt-BR');
+
+  document.getElementById('print-area').innerHTML = `
+    <style>
+      @media print {
+        @page { margin: 20mm; }
+        body { font-family: Arial, sans-serif; color: #0D0D0D; }
+      }
+      .p-hd { background:#0D0D0D; color:#fff; padding:16px 20px; border-bottom:3px solid #C0392B; margin-bottom:20px; }
+      .p-hd-brand { font-size:18px; font-weight:bold; }
+      .p-hd-sub { font-size:10px; color:#aaa; margin-top:3px; letter-spacing:1px; }
+      .p-title { font-size:20px; font-weight:bold; margin-bottom:14px; line-height:1.35; }
+      .p-meta { display:flex; gap:24px; font-size:11px; color:#7A7267; margin-bottom:16px; flex-wrap:wrap; }
+      .p-meta strong { color:#0D0D0D; }
+      .p-score { display:inline-flex; align-items:center; gap:10px; background:#F5F2EC; border:1px solid #D6D0C4; border-radius:6px; padding:10px 16px; margin-bottom:20px; }
+      .p-score-num { font-size:24px; font-weight:900; }
+      .p-score-lbl { font-size:12px; font-weight:600; }
+      .p-section { margin-bottom:16px; }
+      .p-section-title { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:#7A7267; margin-bottom:6px; border-bottom:1px solid #D6D0C4; padding-bottom:4px; }
+      .p-text { font-size:13px; line-height:1.7; }
+      .p-list { list-style:none; padding:0; }
+      .p-list li { font-size:13px; line-height:1.6; padding:2px 0; }
+      .p-list li::before { content:'→ '; color:#1A2E4A; font-weight:bold; }
+      .p-kws { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+      .p-kw { background:#E8EDF4; color:#1A2E4A; font-size:10px; padding:2px 8px; border-radius:10px; }
+      .p-ft { margin-top:24px; padding-top:10px; border-top:1px solid #D6D0C4; font-size:10px; color:#aaa; display:flex; justify-content:space-between; }
+    </style>
+    <div class="p-hd">
+      <div class="p-hd-brand">L&R Intelligence</div>
+      <div class="p-hd-sub">RT NEWS V1 · INTELIGÊNCIA TRABALHISTA PREVENTIVA</div>
+    </div>
+    <div class="p-title">${n.title}</div>
+    <div class="p-meta">
+      <span><strong>Fonte:</strong> ${n.source}</span>
+      <span><strong>Data:</strong> ${formatDate(n.date)}</span>
+      <span><strong>Tipo:</strong> ${n.type}</span>
+      <span><strong>Alerta RT NEWS:</strong> ${n.alerta==='sim'?'✔ SIM':'NÃO'}</span>
+    </div>
+    <div class="p-score">
+      <span class="p-score-num" style="color:${n.score>=70?'#C0392B':n.score>=40?'#D4860A':'#1E7E4A'}">${n.score.toFixed(1)}</span>
+      <span class="p-score-lbl" style="color:${n.score>=70?'#C0392B':n.score>=40?'#D4860A':'#1E7E4A'}">${sc.label.replace(/[🔴🟡🟢]\s*/,'')}</span>
+    </div>
+    ${n.resumo?`<div class="p-section"><div class="p-section-title">Resumo Executivo</div><div class="p-text">${n.resumo}</div></div>`:''}
+    ${n.justificativa?`<div class="p-section"><div class="p-section-title">Justificativa de Impacto</div><div class="p-text">${n.justificativa}</div></div>`:''}
+    ${acoes.length?`<div class="p-section"><div class="p-section-title">Ações Recomendadas</div><ul class="p-list">${acoes.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
+    ${n.risco?`<div class="p-section"><div class="p-section-title">Risco Potencial</div><div class="p-text">${n.risco}</div></div>`:''}
+    ${kws.length?`<div class="p-section"><div class="p-section-title">Palavras-chave</div><div class="p-kws">${kws.map(k=>`<span class="p-kw">${k}</span>`).join('')}</div></div>`:''}
+    ${n.link?`<div class="p-section"><div class="p-section-title">Fonte Original</div><div class="p-text"><a href="${n.link}">${n.link}</a></div></div>`:''}
+    <div class="p-ft"><span>L&R Intelligence · RT NEWS V1 · Gerado automaticamente</span><span>${hoje}</span></div>
+  `;
+  window.print();
+  setTimeout(() => { document.getElementById('print-area').innerHTML = ''; }, 1500);
+}
+
+// ══════════════════════════════════════════════════════════
+// ===== RT NEWS v1.1 — SPRINT 2: DASHBOARD EXECUTIVO =====
+// ══════════════════════════════════════════════════════════
+
+// Referências aos charts para destruir antes de recriar
+const _charts = {};
+
+function openDashboard() {
+  renderDashboard();
+  document.getElementById('modal-dashboard-bg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDashboard() {
+  document.getElementById('modal-dashboard-bg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function _destroyChart(key) {
+  if (_charts[key]) { _charts[key].destroy(); delete _charts[key]; }
+}
+
+// ===== RT NEWS v1.2 — DASHBOARD com Índice RT NEWS e Evolução Semanal =====
+function renderDashboard() {
+  const data  = _data;
+  const hoje  = new Date();
+  const semanaAtual = getWeekNum(hoje);
+
+  // ── KPIs base ──
+  const total   = data.length;
+  const alertas = data.filter(n => n.alerta === 'sim').length;
+  const scoreMediaGeral = total ? data.reduce((a,n)=>a+n.score,0)/total : 0;
+
+  // ── Notícias da semana atual ──
+  const noticias_semana = data.filter(n => {
+    if (!n.date) return false;
+    const d = new Date(n.date);
+    return getWeekNum(d) === semanaAtual && d.getFullYear() === hoje.getFullYear();
+  });
+  const daSemana = noticias_semana.length;
+
+  // ── ÍNDICE RT NEWS DA SEMANA (média ponderada dos scores da semana) ──
+  const indiceRTNEWS = noticias_semana.length
+    ? noticias_semana.reduce((a,n)=>a+n.score,0) / noticias_semana.length
+    : null;
+  const indiceSC = indiceRTNEWS !== null ? scoreClass(indiceRTNEWS) : null;
+
+  // ── Evolução semanal (últimas 8 semanas com dados) ──
+  const porSemana = {};
+  data.forEach(n => {
+    if (!n.date) return;
+    const d = new Date(n.date);
+    if (isNaN(d)) return;
+    const wk  = getWeekNum(d);
+    const yr  = d.getFullYear();
+    const key = `${yr}-${String(wk).padStart(2,'0')}`;
+    if (!porSemana[key]) porSemana[key] = { label:`Sem. ${wk}`, scores:[], total:0, ano:yr };
+    porSemana[key].scores.push(n.score);
+    porSemana[key].total++;
+  });
+  const semanas = Object.entries(porSemana)
+    .sort(([a],[b])=>a.localeCompare(b))
+    .slice(-8)
+    .map(([,v])=>({ label:v.label, media: v.scores.reduce((a,b)=>a+b,0)/v.scores.length, total:v.total }));
+
+  // ── Por tipo ──
+  const tipos = {};
+  data.forEach(n => { tipos[n.type]=(tipos[n.type]||0)+1; });
+
+  // ── Fontes top ──
+  const fontes = {};
+  data.forEach(n => { if (n.source) fontes[n.source]=(fontes[n.source]||0)+1; });
+  const topFontes = Object.entries(fontes).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  // ── Risco ──
+  const rAlto  = data.filter(n=>scoreClass(n.score).key==='alto').length;
+  const rMod   = data.filter(n=>scoreClass(n.score).key==='moderado').length;
+  const rBaixo = data.filter(n=>scoreClass(n.score).key==='baixo').length;
+
+  const scMG = scoreClass(scoreMediaGeral);
+
+  // ── Tendência semanal (compara última vs penúltima semana) ──
+  let tendencia = '';
+  if (semanas.length >= 2) {
+    const diff = semanas[semanas.length-1].media - semanas[semanas.length-2].media;
+    tendencia = diff > 2 ? '↑ Cenário mais crítico' : diff < -2 ? '↓ Cenário mais estável' : '→ Estável';
+  }
+
+  document.getElementById('dash-bd').innerHTML = `
+
+    <!-- KPIs linha 1: Gerais -->
+    <div>
+      <div class="dash-section-title">Indicadores Gerais</div>
+      <div class="dash-kpis">
+        <div class="dash-kpi kpi-total">
+          <div class="dash-kpi-num">${total}</div>
+          <div class="dash-kpi-lbl">Notícias cadastradas</div>
+        </div>
+        <div class="dash-kpi kpi-alert">
+          <div class="dash-kpi-num">${alertas}</div>
+          <div class="dash-kpi-lbl">Alertas RT NEWS</div>
+        </div>
+        <div class="dash-kpi kpi-score">
+          <div class="dash-kpi-num" style="color:${scMG.lbl_color}">${scoreMediaGeral.toFixed(1)}</div>
+          <div class="dash-kpi-lbl">Score médio geral</div>
+        </div>
+        <div class="dash-kpi kpi-week">
+          <div class="dash-kpi-num">${daSemana}</div>
+          <div class="dash-kpi-lbl">Notícias semana ${semanaAtual}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÍNDICE RT NEWS DA SEMANA — indicador gerencial de destaque -->
+    <div>
+      <div class="dash-section-title">Índice RT NEWS · Semana ${semanaAtual}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+        <!-- Índice numérico -->
+        <div style="background:var(--ink);border-radius:10px;padding:24px 20px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${indiceRTNEWS!==null?indiceSC.lbl_color:'#555'}"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1.5px;">Índice RT NEWS</div>
+          <div style="font-family:'Playfair Display',serif;font-size:48px;font-weight:900;line-height:1;color:${indiceRTNEWS!==null?indiceSC.lbl_color:'#555'}">
+            ${indiceRTNEWS!==null ? indiceRTNEWS.toFixed(1) : '—'}
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${indiceRTNEWS!==null?indiceSC.lbl_color:'#555'}">
+            ${indiceRTNEWS!==null ? indiceSC.label : 'Sem dados esta semana'}
+          </div>
+          <div style="font-size:12px;color:#555;margin-top:4px;">
+            Média ponderada de ${daSemana} notícia${daSemana!==1?'s':''} esta semana
+          </div>
+          ${tendencia ? `<div style="font-family:'DM Mono',monospace;font-size:11px;color:#888;margin-top:6px;padding-top:6px;border-top:1px solid #222;">${tendencia} vs semana anterior</div>` : ''}
+        </div>
+
+        <!-- Mini evolução semanal em barras -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Últimas semanas</div>
+          ${semanas.length ? semanas.slice(-6).map(s => `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);width:54px;flex-shrink:0;">${s.label}</span>
+              <div style="flex:1;height:8px;background:var(--cream);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;border-radius:4px;width:${s.media}%;background:${s.media>=70?'#C0392B':s.media>=40?'#D4860A':'#1E7E4A'};"></div>
+              </div>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:${s.media>=70?'#C0392B':s.media>=40?'#D4860A':'#1E7E4A'};width:36px;text-align:right;">${s.media.toFixed(0)}</span>
+            </div>
+          `).join('') : '<div style="font-size:13px;color:var(--muted);padding:12px 0;">Dados insuficientes</div>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribuição por risco -->
+    <div>
+      <div class="dash-section-title">Distribuição por Risco</div>
+      <div class="dash-chart-box">
+        <div class="dash-risk-bars">
+          <div class="dash-risk-row">
+            <span class="dash-risk-lbl" style="color:#C0392B">🔴 Alto</span>
+            <div class="dash-risk-bar-wrap"><div class="dash-risk-bar-fill" style="width:${total?rAlto/total*100:0}%;background:#C0392B"></div></div>
+            <span class="dash-risk-count">${rAlto}</span>
+          </div>
+          <div class="dash-risk-row">
+            <span class="dash-risk-lbl" style="color:#D4860A">🟡 Moderado</span>
+            <div class="dash-risk-bar-wrap"><div class="dash-risk-bar-fill" style="width:${total?rMod/total*100:0}%;background:#D4860A"></div></div>
+            <span class="dash-risk-count">${rMod}</span>
+          </div>
+          <div class="dash-risk-row">
+            <span class="dash-risk-lbl" style="color:#1E7E4A">🟢 Baixo</span>
+            <div class="dash-risk-bar-wrap"><div class="dash-risk-bar-fill" style="width:${total?rBaixo/total*100:0}%;background:#1E7E4A"></div></div>
+            <span class="dash-risk-count">${rBaixo}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="dash-charts-grid">
+
+      <!-- Evolução semanal do score — gráfico de linha -->
+      <div class="dash-chart-box full">
+        <div class="dash-chart-title">📈 Evolução Semanal do Índice RT NEWS</div>
+        <div class="dash-chart-canvas" style="height:210px">
+          <canvas id="chart-score"></canvas>
+        </div>
+      </div>
+
+      <!-- Categorias -->
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">📂 Notícias por Categoria</div>
+        <div class="dash-chart-canvas" style="height:200px">
+          <canvas id="chart-tipos"></canvas>
+        </div>
+      </div>
+
+      <!-- Fontes top -->
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">📰 Fontes mais utilizadas</div>
+        <div class="dash-sources-list" id="dash-sources-list"></div>
+      </div>
+
+    </div>
+  `;
+
+  // ── Lista de fontes ──
+  const maxF = topFontes[0]?topFontes[0][1]:1;
+  document.getElementById('dash-sources-list').innerHTML = topFontes.map(([nome,qtd],i) => `
+    <div class="dash-source-row">
+      <span class="dash-source-rank">#${i+1}</span>
+      <span class="dash-source-name">${nome}</span>
+      <div class="dash-source-bar-wrap"><div class="dash-source-bar-fill" style="width:${(qtd/maxF)*100}%"></div></div>
+      <span class="dash-source-count">${qtd}</span>
+    </div>
+  `).join('') || '<span style="font-size:13px;color:var(--muted)">Sem dados</span>';
+
+  // ── Chart: Evolução semanal ──
+  _destroyChart('score');
+  if (semanas.length) {
+    const ctxS = document.getElementById('chart-score').getContext('2d');
+    _charts['score'] = new Chart(ctxS, {
+      type: 'line',
+      data: {
+        labels: semanas.map(s=>s.label),
+        datasets: [{
+          label: 'Índice RT NEWS',
+          data: semanas.map(s=>s.media.toFixed(1)),
+          borderColor: '#C0392B',
+          backgroundColor: 'rgba(192,57,43,.07)',
+          borderWidth: 2.5,
+          pointBackgroundColor: semanas.map(s=>s.media>=70?'#C0392B':s.media>=40?'#D4860A':'#1E7E4A'),
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: true, tension: 0.35,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display:false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` Índice: ${ctx.parsed.y}  ·  ${ctx.parsed.y>=70?'Alto Risco':ctx.parsed.y>=40?'Risco Moderado':'Baixo Risco'}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            min:0, max:100,
+            grid: { color:'rgba(0,0,0,.05)' },
+            ticks: { font:{size:11}, callback: v=>`${v}` },
+            // Zonas de risco
+          },
+          x: { grid:{ display:false }, ticks:{ font:{size:11} } }
+        }
+      }
+    });
+  }
+
+  // ── Chart: Categorias (doughnut) ──
+  _destroyChart('tipos');
+  const tipoEntries = Object.entries(tipos);
+  if (tipoEntries.length) {
+    const ctxT = document.getElementById('chart-tipos').getContext('2d');
+    const paleta = ['#1A2E4A','#C0392B','#D4860A','#1E7E4A','#7A7267','#2C4870'];
+    _charts['tipos'] = new Chart(ctxT, {
+      type: 'doughnut',
+      data: {
+        labels: tipoEntries.map(([t])=>t),
+        datasets: [{ data:tipoEntries.map(([,c])=>c), backgroundColor:paleta.slice(0,tipoEntries.length), borderWidth:2, borderColor:'#fff' }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'bottom', labels:{ font:{size:10}, padding:10 } } }
+      }
+    });
+  }
+}
+
+// ── ESC fecha todos os modais ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeDetail(); closeAlertas(); closeRelatorios();
+    closeSolicitarAcesso(); cancelLogin(); closeDashboard();
+  }
+});
 
 calcScore();
 loadAndRender();
