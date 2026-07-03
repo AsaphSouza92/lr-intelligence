@@ -1303,16 +1303,30 @@ function exportPDF(id) {
     white:  [255,255,255],
   };
   const scoreRGB = n.score>=70 ? C.red : n.score>=40 ? [212,134,10] : [30,126,74];
-  const scoreHex = n.score>=70 ? '#C0392B' : n.score>=40 ? '#D4860A' : '#1E7E4A';
 
-  // Carrega jsPDF dinamicamente
+  // Carrega jsPDF dinamicamente com fallback de CDN
   const loadJsPDF = () => new Promise((resolve, reject) => {
-    if (window.jspdf) { resolve(window.jspdf.jsPDF); return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload = () => resolve(window.jspdf.jsPDF);
-    s.onerror = reject;
-    document.head.appendChild(s);
+    // Já carregado anteriormente
+    if (window.jspdf && window.jspdf.jsPDF) { resolve(window.jspdf.jsPDF); return; }
+    // Tenta CDN principal
+    const tryLoad = (src) => new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => {
+        // jsPDF UMD expõe window.jspdf.jsPDF
+        if (window.jspdf && window.jspdf.jsPDF) res(window.jspdf.jsPDF);
+        else rej(new Error('jsPDF não encontrado após carregamento'));
+      };
+      s.onerror = () => rej(new Error('Falha ao carregar: ' + src));
+      document.head.appendChild(s);
+    });
+    // CDN principal → fallback unpkg
+    tryLoad('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+      .then(resolve)
+      .catch(() => tryLoad('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js')
+        .then(resolve)
+        .catch(reject)
+      );
   });
 
   showToast('Gerando nota técnica...', '#1A2E4A');
@@ -1492,11 +1506,11 @@ function exportPDF(id) {
       sectionTitle('Ações Recomendadas');
       acoes.forEach((a, i) => {
         checkPage(10);
-        // Número em círculo vermelho
+        // Número em quadrado arredondado vermelho (mais compatível que circle)
         doc.setFillColor(...C.red);
-        doc.circle(M+2.5, y-1.2, 2.5, 'F');
+        doc.roundedRect(M, y-4, 5, 5, 1, 1, 'F');
         doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...C.white);
-        doc.text(`${i+1}`, M+2.5-(i<9?1:2), y-0.4);
+        doc.text(`${i+1}`, M+1.2, y-0.5);
         // Texto da ação
         doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...C.ink);
         const lines = doc.splitTextToSize(a, TW-10);
@@ -1545,7 +1559,13 @@ function exportPDF(id) {
       checkPage(12);
       sectionTitle('Fonte Original');
       doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...C.accent);
-      doc.textWithLink(n.link, M, y, { url: n.link });
+      // Usa link clicável com fallback seguro para todas as versões do jsPDF
+      const linkTxt = n.link.length > 90 ? n.link.substring(0,87)+'...' : n.link;
+      try {
+        doc.textWithLink(linkTxt, M, y, { url: n.link });
+      } catch(_) {
+        doc.text(linkTxt, M, y);
+      }
       y += 8;
     }
 
@@ -1568,7 +1588,10 @@ function exportPDF(id) {
     const filename = `LR_NTecnica_${(n.title||'noticia').substring(0,28).replace(/[^a-zA-Z0-9]/g,'_')}.pdf`;
     doc.save(filename);
     showToast('✓ Nota técnica gerada!');
-  }).catch(e => { console.error(e); showToast('⚠️ Erro ao gerar PDF.','#D4860A'); });
+  }).catch(e => {
+    console.error('[L&R PDF] Erro ao gerar nota técnica:', e);
+    showToast('⚠️ Não foi possível gerar o PDF. Verifique sua conexão.', '#D4860A');
+  });
 }
 
 // ── COPIAR TEXTO ──
