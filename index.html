@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>L&R Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- RT NEWS v1.1 — Chart.js para Dashboard Executivo -->
+<!-- RT NEWS v1.2 — Bibliotecas carregadas no head para garantir disponibilidade em todos os dispositivos -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root {
   --ink: #0D0D0D;
@@ -1304,29 +1305,24 @@ function exportPDF(id) {
   };
   const scoreRGB = n.score>=70 ? C.red : n.score>=40 ? [212,134,10] : [30,126,74];
 
-  // Carrega jsPDF dinamicamente com fallback de CDN
+  // jsPDF já carregado no <head> — apenas verifica disponibilidade
   const loadJsPDF = () => new Promise((resolve, reject) => {
-    // Já carregado anteriormente
-    if (window.jspdf && window.jspdf.jsPDF) { resolve(window.jspdf.jsPDF); return; }
-    // Tenta CDN principal
-    const tryLoad = (src) => new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = () => {
-        // jsPDF UMD expõe window.jspdf.jsPDF
-        if (window.jspdf && window.jspdf.jsPDF) res(window.jspdf.jsPDF);
-        else rej(new Error('jsPDF não encontrado após carregamento'));
-      };
-      s.onerror = () => rej(new Error('Falha ao carregar: ' + src));
-      document.head.appendChild(s);
-    });
-    // CDN principal → fallback unpkg
-    tryLoad('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-      .then(resolve)
-      .catch(() => tryLoad('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js')
-        .then(resolve)
-        .catch(reject)
-      );
+    if (window.jspdf && window.jspdf.jsPDF) {
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+    // Aguarda até 5s caso o script do head ainda esteja carregando
+    let tentativas = 0;
+    const intervalo = setInterval(() => {
+      tentativas++;
+      if (window.jspdf && window.jspdf.jsPDF) {
+        clearInterval(intervalo);
+        resolve(window.jspdf.jsPDF);
+      } else if (tentativas >= 50) {
+        clearInterval(intervalo);
+        reject(new Error('jsPDF não disponível após 5 segundos'));
+      }
+    }, 100);
   });
 
   showToast('Gerando nota técnica...', '#1A2E4A');
