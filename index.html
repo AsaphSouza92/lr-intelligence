@@ -157,7 +157,24 @@ nav { background:var(--ink); padding:0 48px; height:64px; display:flex; align-it
 .card-body { padding:14px 18px 16px; }
 .card-meta { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
 .card-source { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+/* ── RT NEWS v1.3 — GRUPOS DE CATEGORIA ── */
+/* Trabalhista: usa var(--accent) existente — sem alteração */
+/* Industrial: nova cor única para todo o grupo */
+:root {
+  --industrial: #1A4A3A;        /* verde escuro corporativo */
+  --industrial-light: #E6F2EE;  /* fundo claro industrial */
+  --industrial-border: rgba(26,74,58,.35);
+}
 .card-type-tag { font-size:10px; color:var(--accent); background:var(--accent-light); padding:2px 8px; border-radius:10px; font-weight:600; }
+.card-type-tag.industrial { color:var(--industrial); background:var(--industrial-light); }
+
+/* Tags de categorias relacionadas e entidades nos cards */
+.card-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:5px; }
+.card-tag-rel { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); background:var(--cream); padding:1px 6px; border-radius:8px; }
+.card-tag-ent { font-family:'DM Mono',monospace; font-size:9px; color:var(--industrial); background:var(--industrial-light); padding:1px 6px; border-radius:8px; }
+
+/* Gradientes industriais para o card-img */
+.card-img.industrial { background: linear-gradient(135deg,#1A4A3A 0%,#2D7A5E 100%) !important; }
 .card-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; line-height:1.4; margin-bottom:7px; }
 .card-summary { font-size:13px; color:var(--muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .card-foot { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; border-top:1px solid var(--cream); background:var(--paper); }
@@ -641,13 +658,22 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
       <span style="font-size:18px">⚠️</span>
       <span id="painel-alert-text"></span>
     </div>
-    <div class="filters">
+    <div class="filters" id="filters-container">
       <button class="flt on" onclick="filterCards('all',this)">Todos</button>
       <button class="flt" onclick="filterCards('alto',this)">🔴 Alto</button>
       <button class="flt" onclick="filterCards('moderado',this)">🟡 Moderado</button>
       <button class="flt" onclick="filterCards('baixo',this)">🟢 Baixo</button>
-      <button class="flt" onclick="filterCards('Legislativo Trabalhista',this)">Legislativo</button>
+      <span style="width:1px;height:20px;background:var(--border);display:inline-block;margin:0 4px;align-self:center;"></span>
       <button class="flt" onclick="filterCards('Jurisprudência Trabalhista',this)">Jurisprudência</button>
+      <button class="flt" onclick="filterCards('Legislativo Trabalhista',this)">Legislativo</button>
+      <button class="flt" onclick="filterCards('Relações Sindicais',this)">Sindical</button>
+      <button class="flt" onclick="filterCards('Regulatório',this)">Regulatório</button>
+      <button class="flt" onclick="filterCards('Recursos Humanos',this)">RH</button>
+      <button class="flt" onclick="filterCards('Saúde e Segurança',this)">SST</button>
+      <span style="width:1px;height:20px;background:var(--border);display:inline-block;margin:0 4px;align-self:center;"></span>
+      <button class="flt" style="border-color:var(--industrial);color:var(--industrial);" onclick="filterCards('__industrial__',this)">🏭 Estratégia Industrial</button>
+      <button class="flt" onclick="filterCards('Mercado Automotivo',this)">Mercado Auto</button>
+      <button class="flt" onclick="filterCards('Economia',this)">Economia</button>
     </div>
     <div class="grid" id="news-grid">
       <div class="empty-state"><div class="es-icon">⏳</div><p>Carregando notícias...</p></div>
@@ -724,13 +750,41 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; h
             <div class="fg"><label>Título</label><input id="f-title" placeholder="Título da notícia" /></div>
             <div class="fg"><label>Fonte</label><input id="f-source" placeholder="Ex: JOTA, CONJUR..." /></div>
             <div class="fg"><label>Data</label><input id="f-date" type="date" /></div>
-            <div class="fg"><label>Tipo de Notícia</label>
+            <div class="fg"><label>Categoria Principal ★</label>
               <select id="f-type">
-                <option>Legislativo Trabalhista</option>
-                <option>Jurisprudência Trabalhista</option>
-                <option>Sindical</option>
-                <option>Regulatório</option>
+                <optgroup label="── Relações Trabalhistas ──">
+                  <option>Jurisprudência Trabalhista</option>
+                  <option>Legislativo Trabalhista</option>
+                  <option>Relações Sindicais</option>
+                  <option>Regulatório</option>
+                  <option>Recursos Humanos</option>
+                  <option>Saúde e Segurança</option>
+                </optgroup>
+                <optgroup label="── Estratégia Industrial ──">
+                  <option>Mercado Automotivo</option>
+                  <option>Indústria Automotiva</option>
+                  <option>Cadeia de Suprimentos</option>
+                  <option>Economia</option>
+                  <option>Comércio Exterior</option>
+                  <option>Tecnologia e Inovação</option>
+                </optgroup>
               </select>
+            </div>
+          </div>
+
+          <!-- RT NEWS v1.3 — Novos campos: Categorias Relacionadas e Entidades -->
+          <div class="form-grid" style="margin-top:14px;">
+            <div class="fg">
+              <label>Categorias Relacionadas (múltipla seleção)</label>
+              <div id="f-cats-rel-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--paper);min-height:44px;cursor:default;"></div>
+              <input type="hidden" id="f-cats-rel" />
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;" id="f-cats-rel-opts"></div>
+            </div>
+            <div class="fg">
+              <label>Entidades Relacionadas (múltipla seleção)</label>
+              <div id="f-ents-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--paper);min-height:44px;cursor:default;"></div>
+              <input type="hidden" id="f-ents" />
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;" id="f-ents-opts"></div>
             </div>
           </div>
           <div class="form-divider"></div>
@@ -846,6 +900,40 @@ const PESOS = [25, 25, 20, 15, 15];
 const CRIT_NAMES = ['Impacto Operacional','Impacto Jurídico','Potencial de Judicialização','Pressão Sindical / Social','Urgência / Tendência de Evolução'];
 const CARD_GRADIENTS = ['linear-gradient(135deg,#1A2E4A 0%,#2C4870 100%)','linear-gradient(135deg,#2D5016 0%,#4A7C1F 100%)','linear-gradient(135deg,#6B1A1A 0%,#8B2020 100%)','linear-gradient(135deg,#2A1A4A 0%,#4A2870 100%)','linear-gradient(135deg,#1A3A3A 0%,#1F6060 100%)','linear-gradient(135deg,#3A2A1A 0%,#705020 100%)'];
 const CARD_ICONS = ['⚖️','🤱','📋','🏭','📊','⚙️','🏛️','📌'];
+
+// ── RT NEWS v1.3 — Classificação de categorias ──
+const CATS_TRABALHISTA = [
+  'Jurisprudência Trabalhista','Legislativo Trabalhista','Relações Sindicais',
+  'Regulatório','Recursos Humanos','Saúde e Segurança'
+];
+const CATS_INDUSTRIAL = [
+  'Mercado Automotivo','Indústria Automotiva','Cadeia de Suprimentos',
+  'Economia','Comércio Exterior','Tecnologia e Inovação'
+];
+const TODAS_CATS = [...CATS_TRABALHISTA, ...CATS_INDUSTRIAL];
+
+// Entidades disponíveis para seleção múltipla
+const ENTIDADES_LIST = [
+  'Stellantis','Volkswagen','GM','BYD','Toyota','Honda','Renault','Hyundai',
+  'Nissan','Iveco','CNH','ANFAVEA','Sindipeças','Governo Federal',
+  'Ministério do Trabalho','STF','TST','Setor Automotivo'
+];
+
+// Retorna true se a categoria pertence ao grupo industrial
+function isIndustrial(cat) { return CATS_INDUSTRIAL.includes(cat); }
+
+// Compatibilidade retroativa: campo 'type' vira categoria principal
+function getCat(n) { return n.categoria || n.type || ''; }
+function getCatsRel(n) {
+  if (!n.categoriasRel) return [];
+  if (Array.isArray(n.categoriasRel)) return n.categoriasRel;
+  return String(n.categoriasRel).split(',').map(s=>s.trim()).filter(Boolean);
+}
+function getEntidades(n) {
+  if (!n.entidades) return [];
+  if (Array.isArray(n.entidades)) return n.entidades;
+  return String(n.entidades).split(',').map(s=>s.trim()).filter(Boolean);
+}
 
 let _data = [];
 let _loginAttempts = 0;
@@ -976,29 +1064,50 @@ function renderAlert(data) {
 }
 
 let currentFilter='all';
-function filterCards(cat,btn) { currentFilter=cat; document.querySelectorAll('.flt').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); renderGrid(_data,cat); }
+function filterCards(cat,btn) {
+  currentFilter=cat;
+  document.querySelectorAll('.flt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderGrid(_data,cat);
+}
 
 function renderGrid(data, filter) {
   const grid=document.getElementById('news-grid');
   let filtered=data;
-  if (filter==='alto') filtered=data.filter(n=>scoreClass(n.score).key==='alto');
-  else if (filter==='moderado') filtered=data.filter(n=>scoreClass(n.score).key==='moderado');
-  else if (filter==='baixo') filtered=data.filter(n=>scoreClass(n.score).key==='baixo');
-  else if (filter!=='all') filtered=data.filter(n=>n.type===filter);
+  if (filter==='alto')           filtered=data.filter(n=>scoreClass(n.score).key==='alto');
+  else if (filter==='moderado')  filtered=data.filter(n=>scoreClass(n.score).key==='moderado');
+  else if (filter==='baixo')     filtered=data.filter(n=>scoreClass(n.score).key==='baixo');
+  else if (filter==='__industrial__') filtered=data.filter(n=>isIndustrial(getCat(n)));
+  else if (filter!=='all')       filtered=data.filter(n=>getCat(n)===filter || getCatsRel(n).includes(filter));
+
   if (!filtered.length) {
     if (!isConfigured()) { grid.innerHTML=`<div class="empty-state"><div class="es-icon">⚙️</div><p>Site aguardando configuração</p><small>Adicione a URL do Apps Script e faça o deploy no Vercel.</small></div>`; }
     else { grid.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><p>Nenhuma notícia encontrada</p><small>${filter!=='all'?'Tente outro filtro ou adicione notícias no painel Admin.':'Acesse o Admin para publicar a primeira notícia.'}</small></div>`; }
     return;
   }
+
   grid.innerHTML=filtered.map((n,idx)=>{
-    const sc=scoreClass(n.score); const gi=idx%CARD_GRADIENTS.length; const ic=CARD_ICONS[idx%CARD_ICONS.length];
+    const sc=scoreClass(n.score);
+    const cat=getCat(n);
+    const catsRel=getCatsRel(n);
+    const ents=getEntidades(n);
+    const ind=isIndustrial(cat);
+    // Gradiente: industrial usa cor única, trabalhista usa rotação existente
+    const grad = ind ? 'linear-gradient(135deg,#1A4A3A 0%,#2D7A5E 100%)' : CARD_GRADIENTS[idx%CARD_GRADIENTS.length];
+    const ic=CARD_ICONS[idx%CARD_ICONS.length];
     const isAlerta=n.alerta==='sim';
+    const tagCls = ind ? 'card-type-tag industrial' : 'card-type-tag';
+    // Tags de categorias relacionadas (máx 2) e entidades (máx 2)
+    const relTags = catsRel.slice(0,2).map(r=>`<span class="card-tag-rel">${r}</span>`).join('');
+    const entTags = ents.slice(0,2).map(e=>`<span class="card-tag-ent">${e}</span>`).join('');
+    const hasTags = relTags || entTags;
     return `<div class="card${isAlerta?' card-alerta':''}" onclick="openDetail('${n.id}')">
       ${isAlerta?`<div class="card-alerta-strip"><div class="card-alerta-dot"></div>⚠️ ALERTA ATIVO</div>`:''}
-      <div class="card-img" style="background:${CARD_GRADIENTS[gi]}"><span class="card-img-icon">${ic}</span><span class="card-imp-badge ${sc.badge}">${sc.key==='alto'?'🔴':sc.key==='moderado'?'🟡':'🟢'} ${sc.imp}</span></div>
+      <div class="card-img" style="background:${grad}"><span class="card-img-icon">${ic}</span><span class="card-imp-badge ${sc.badge}">${sc.key==='alto'?'🔴':sc.key==='moderado'?'🟡':'🟢'} ${sc.imp}</span></div>
       <div class="card-score-strip"><div class="score-bar"><div class="score-fill ${sc.fill}" style="width:${n.score}%"></div></div><span class="score-txt ${sc.bs}">${n.score.toFixed(1)} / 100</span></div>
       <div class="card-body">
-        <div class="card-meta"><span class="card-source">${n.source} · ${formatDate(n.date)}</span><span class="card-type-tag">${n.type}</span></div>
+        <div class="card-meta"><span class="card-source">${n.source} · ${formatDate(n.date)}</span><span class="${tagCls}">${cat}</span></div>
+        ${hasTags?`<div class="card-tags">${relTags}${entTags}</div>`:''}
         <div class="card-title">${n.title}</div>
         <div class="card-summary">${n.resumo}</div>
       </div>
@@ -1015,22 +1124,44 @@ function openDetail(id) {
   const sc=scoreClass(n.score); const notas=n.notas||[5,5,5,5,5];
   const acoes=(n.acoes||'').split('\n').filter(Boolean);
   const kws=(n.keywords||'').split(',').map(k=>k.trim()).filter(Boolean);
+  const cat=getCat(n);
+  const catsRel=getCatsRel(n);
+  const ents=getEntidades(n);
+  const ind=isIndustrial(cat);
   const alertVal=n.alerta==='sim'?`<span style="color:var(--red)">✔ SIM — Alerta ativo</span>`:`<span style="color:var(--amber)">⏸ NÃO — Monitoramento</span>`;
   const matrizRows=CRIT_NAMES.map((c,i)=>{const nota=notas[i];const pct=nota*10;const nc=nota>=8?'nr':nota>=5?'na':'ng';const fc=nota>=8?'fill-red':nota>=5?'fill-amb':'fill-grn';return`<div class="srow"><span class="srow-lbl">${c}</span><span class="srow-peso">${PESOS[i]}</span><span class="srow-nota ${nc}">${nota}</span><div class="mini-bar"><div class="mini-fill ${fc}" style="width:${pct}%"></div></div></div>`;}).join('');
+
+  // Campos extras: categorias relacionadas e entidades
+  const mmCatsRel = catsRel.length ? `<div class="mm"><span class="mm-lbl">Categorias Relacionadas</span><span class="mm-val" style="font-size:12px;">${catsRel.join(', ')}</span></div>` : '';
+  const mmEnts    = ents.length    ? `<div class="mm"><span class="mm-lbl">Entidades Relacionadas</span><span class="mm-val" style="font-size:12px;">${ents.join(', ')}</span></div>` : '';
+
+  // Template 2 — Estratégia Industrial usa campos alternativos
+  const conteudoSecoes = ind ? `
+    ${n.resumo?`<div class="msec"><div class="msec-ttl">Resumo Executivo</div><div class="mtext">${n.resumo}</div></div>`:''}
+    ${n.justificativa?`<div class="msec"><div class="msec-ttl">Por que isso importa?</div><div class="mtext">${n.justificativa}</div></div>`:''}
+    ${n.impactos?`<div class="msec"><div class="msec-ttl">Possíveis Impactos</div><div class="mtext">${n.impactos}</div></div>`:''}
+    ${n.oportunidades?`<div class="msec"><div class="msec-ttl">Oportunidades</div><div class="mtext">${n.oportunidades}</div></div>`:''}
+    ${n.risco?`<div class="mrisk"><strong>⚠️ Pontos de Atenção:</strong> ${n.risco}</div>`:''}
+    ${acoes.length?`<div class="msec"><div class="msec-ttl">Ações Recomendadas</div><ul class="mlist">${acoes.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
+  ` : `
+    <div class="msec"><div class="msec-ttl">Resumo Executivo</div><div class="mtext">${n.resumo}</div></div>
+    ${acoes.length?`<div class="msec"><div class="msec-ttl">Ações Recomendadas</div><ul class="mlist">${acoes.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
+    ${n.risco?`<div class="mrisk"><strong>⚠️ Risco Potencial:</strong> ${n.risco}</div>`:''}
+  `;
+
   document.getElementById('modal-detail-inner').innerHTML=`
     <div class="modal-hd"><div class="modal-ttl">${n.title}</div><button class="modal-close" onclick="closeDetail()">✕</button></div>
     <div class="modal-bd">
       <div class="modal-meta-row">
         <div class="mm"><span class="mm-lbl">Fonte</span><span class="mm-val">${n.source}</span></div>
         <div class="mm"><span class="mm-lbl">Data</span><span class="mm-val">${formatDate(n.date)}</span></div>
-        <div class="mm"><span class="mm-lbl">Tipo</span><span class="mm-val">${n.type}</span></div>
+        <div class="mm"><span class="mm-lbl">Categoria</span><span class="mm-val">${cat}</span></div>
         <div class="mm"><span class="mm-lbl">Alerta RT NEWS</span><span class="mm-val">${alertVal}</span></div>
+        ${mmCatsRel}${mmEnts}
       </div>
       <div class="smat"><div class="smat-hd"><span class="smat-hd-lbl">Matriz de Score · RT NEWS V1</span><span class="smat-total ${sc.bc}">SCORE: ${n.score.toFixed(1)} · ${sc.label}</span></div><div class="smat-col-hd"><span>Critério</span><span>Peso</span><span>Nota</span><span>Barra</span></div>${matrizRows}</div>
       <div class="imp-row ${sc.row}"><div class="idot ${sc.dot}"></div><div><div class="imp-lbl" style="color:${sc.lbl_color}">Impacto: ${sc.imp}</div><div class="imp-desc">${n.justificativa||n.resumo}</div></div></div>
-      <div class="msec"><div class="msec-ttl">Resumo Executivo</div><div class="mtext">${n.resumo}</div></div>
-      ${acoes.length?`<div class="msec"><div class="msec-ttl">Ações Recomendadas</div><ul class="mlist">${acoes.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
-      ${n.risco?`<div class="mrisk"><strong>⚠️ Risco Potencial:</strong> ${n.risco}</div>`:''}
+      ${conteudoSecoes}
     </div>
     <div class="modal-ft">
       <div class="kws">${kws.map(k=>`<span class="kw">${k}</span>`).join('')}</div>
@@ -1141,24 +1272,83 @@ async function renderArchivedList() {
   } catch(e) { el.innerHTML='<div style="padding:32px;text-align:center;color:var(--red);font-size:14px;">Erro ao carregar arquivadas.</div>'; }
 }
 
+// ===== RT NEWS v1.3 — resetForm / editNews / saveNews com novos campos =====
 function resetForm() {
-  document.getElementById('f-edit-id').value=''; document.getElementById('form-mode-label').textContent='Nova Notícia';
+  document.getElementById('f-edit-id').value='';
+  document.getElementById('form-mode-label').textContent='Nova Notícia';
   ['title','source','date','resumo','justificativa','acoes','risco','keywords','link'].forEach(f=>{ document.getElementById('f-'+f).value=''; });
-  document.getElementById('f-type').value='Legislativo Trabalhista'; document.getElementById('f-alerta').value='nao';
-  [0,1,2,3,4].forEach(i=>{document.getElementById('sl-'+i).value=5;document.getElementById('sv-'+i).textContent='5';}); calcScore();
+  document.getElementById('f-type').value='Jurisprudência Trabalhista';
+  document.getElementById('f-alerta').value='nao';
+  document.getElementById('f-cats-rel').value='';
+  document.getElementById('f-ents').value='';
+  [0,1,2,3,4].forEach(i=>{document.getElementById('sl-'+i).value=5;document.getElementById('sv-'+i).textContent='5';});
+  calcScore();
+  _renderMultiSelect('f-cats-rel-opts','f-cats-rel-wrap','f-cats-rel', TODAS_CATS, []);
+  _renderMultiSelect('f-ents-opts','f-ents-wrap','f-ents', ENTIDADES_LIST, []);
+}
+
+// ── Helper: renderiza controles de múltipla seleção ──
+function _renderMultiSelect(optsId, wrapId, hiddenId, lista, selecionados) {
+  const wrap   = document.getElementById(wrapId);
+  const hidden = document.getElementById(hiddenId);
+  const opts   = document.getElementById(optsId);
+  if (!wrap||!hidden||!opts) return;
+  let sel = [...selecionados];
+  hidden.value = sel.join(',');
+  wrap.innerHTML = sel.length
+    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemove(this,'${wrapId}','${hiddenId}','${optsId}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
+    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
+  opts.innerHTML = lista.map(item => {
+    const checked = sel.includes(item);
+    return `<button type="button" data-val="${item}" style="font-size:10px;padding:2px 10px;border-radius:20px;border:1px solid var(--border);background:${checked?'var(--ink)':'#fff'};color:${checked?'#fff':'var(--muted)'};cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:3px;" onclick="_msToggle(this,'${wrapId}','${hiddenId}')">${item}</button>`;
+  }).join('');
+}
+
+function _msToggle(btn, wrapId, hiddenId) {
+  const hidden = document.getElementById(hiddenId);
+  let sel = hidden.value ? hidden.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const item = btn.dataset.val;
+  if (sel.includes(item)) { sel = sel.filter(s=>s!==item); btn.style.background='#fff'; btn.style.color='var(--muted)'; }
+  else { sel.push(item); btn.style.background='var(--ink)'; btn.style.color='#fff'; }
+  hidden.value = sel.join(',');
+  const wrap = document.getElementById(wrapId);
+  wrap.innerHTML = sel.length
+    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemoveByVal('${wrapId}','${hiddenId}','${btn.closest('[id]')?'':''}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
+    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
+}
+
+function _msRemove(el, wrapId, hiddenId, optsId, item) {
+  const hidden = document.getElementById(hiddenId);
+  let sel = hidden.value ? hidden.value.split(',').map(s=>s.trim()).filter(s=>s && s!==item) : [];
+  hidden.value = sel.join(',');
+  const opts = document.getElementById(optsId);
+  if (opts) opts.querySelectorAll('button').forEach(b=>{ if(b.dataset.val===item){b.style.background='#fff';b.style.color='var(--muted)';} });
+  const wrap = document.getElementById(wrapId);
+  wrap.innerHTML = sel.length
+    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemove(this,'${wrapId}','${hiddenId}','${optsId}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
+    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
 }
 
 function editNews(id) {
   const n=_data.find(x=>x.id===id); if (!n) return;
-  document.getElementById('f-edit-id').value=n.id; document.getElementById('form-mode-label').textContent='Editando Notícia';
-  document.getElementById('f-title').value=n.title||''; document.getElementById('f-source').value=n.source||'';
-  document.getElementById('f-date').value=n.date||''; document.getElementById('f-type').value=n.type||'Legislativo Trabalhista';
-  document.getElementById('f-resumo').value=n.resumo||''; document.getElementById('f-justificativa').value=n.justificativa||'';
-  document.getElementById('f-acoes').value=n.acoes||''; document.getElementById('f-risco').value=n.risco||'';
-  document.getElementById('f-keywords').value=n.keywords||''; document.getElementById('f-link').value=n.link||'';
+  document.getElementById('f-edit-id').value=n.id;
+  document.getElementById('form-mode-label').textContent='Editando Notícia';
+  document.getElementById('f-title').value=n.title||'';
+  document.getElementById('f-source').value=n.source||'';
+  document.getElementById('f-date').value=n.date||'';
+  document.getElementById('f-type').value=getCat(n)||'Jurisprudência Trabalhista';
+  document.getElementById('f-resumo').value=n.resumo||'';
+  document.getElementById('f-justificativa').value=n.justificativa||'';
+  document.getElementById('f-acoes').value=n.acoes||'';
+  document.getElementById('f-risco').value=n.risco||'';
+  document.getElementById('f-keywords').value=n.keywords||'';
+  document.getElementById('f-link').value=n.link||'';
   document.getElementById('f-alerta').value=n.alerta||'nao';
   (n.notas||[5,5,5,5,5]).forEach((v,i)=>{document.getElementById('sl-'+i).value=v;document.getElementById('sv-'+i).textContent=v;});
-  calcScore(); showTab('new'); window.scrollTo({top:0,behavior:'smooth'});
+  calcScore();
+  _renderMultiSelect('f-cats-rel-opts','f-cats-rel-wrap','f-cats-rel', TODAS_CATS, getCatsRel(n));
+  _renderMultiSelect('f-ents-opts','f-ents-wrap','f-ents', ENTIDADES_LIST, getEntidades(n));
+  showTab('new'); window.scrollTo({top:0,behavior:'smooth'});
 }
 
 async function archiveNews(id) {
@@ -1189,12 +1379,23 @@ async function saveNews() {
   const notas=[0,1,2,3,4].map(i=>parseInt(document.getElementById('sl-'+i).value));
   const score=computeScore(notas);
   const editId=document.getElementById('f-edit-id').value;
+  const catPrincipal=document.getElementById('f-type').value;
+  const catsRelRaw=(document.getElementById('f-cats-rel').value||'');
+  const entsRaw=(document.getElementById('f-ents').value||'');
+  // Regra automática: industrial sem entidade recebe 'Setor Automotivo'
+  let entidades=entsRaw?entsRaw.split(',').map(s=>s.trim()).filter(Boolean):[];
+  if(isIndustrial(catPrincipal)&&entidades.length===0) entidades=['Setor Automotivo'];
   const item={
     id:editId||'', title, source:document.getElementById('f-source').value.trim(),
-    date:document.getElementById('f-date').value, type:document.getElementById('f-type').value,
-    resumo:document.getElementById('f-resumo').value.trim(), justificativa:document.getElementById('f-justificativa').value.trim(),
-    acoes:document.getElementById('f-acoes').value.trim(), risco:document.getElementById('f-risco').value.trim(),
-    keywords:document.getElementById('f-keywords').value.trim(), link:document.getElementById('f-link').value.trim(),
+    date:document.getElementById('f-date').value,
+    type:catPrincipal, categoria:catPrincipal,
+    categoriasRel:catsRelRaw, entidades:entidades.join(','),
+    resumo:document.getElementById('f-resumo').value.trim(),
+    justificativa:document.getElementById('f-justificativa').value.trim(),
+    acoes:document.getElementById('f-acoes').value.trim(),
+    risco:document.getElementById('f-risco').value.trim(),
+    keywords:document.getElementById('f-keywords').value.trim(),
+    link:document.getElementById('f-link').value.trim(),
     alerta:document.getElementById('f-alerta').value, notas, score,
   };
   showLoading(true);
@@ -1909,6 +2110,31 @@ function renderDashboard() {
         <div class="dash-sources-list" id="dash-sources-list"></div>
       </div>
     </div>
+
+    <!-- RT NEWS v1.3 — Panorama Trabalhista e Industrial -->
+    <div class="dash-charts-grid">
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">⚖️ Panorama Trabalhista · Por Categoria</div>
+        <div id="dash-panorama-trab" style="display:flex;flex-direction:column;gap:0;"></div>
+      </div>
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">🏭 Panorama Industrial · Por Categoria</div>
+        <div id="dash-panorama-ind" style="display:flex;flex-direction:column;gap:0;"></div>
+      </div>
+    </div>
+
+    <!-- RT NEWS v1.3 — Entidades e Temas Relacionados -->
+    <div class="dash-charts-grid">
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">🏢 Empresas e Entidades Mais Citadas</div>
+        <div class="dash-sources-list" id="dash-entidades"></div>
+      </div>
+      <div class="dash-chart-box">
+        <div class="dash-chart-title">🔗 Temas Mais Relacionados</div>
+        <div class="dash-sources-list" id="dash-temas-rel"></div>
+      </div>
+    </div>
+
   `;
 
   // ── Lista de fontes ──
@@ -1921,6 +2147,61 @@ function renderDashboard() {
       <span class="dash-source-count">${qtd}</span>
     </div>
   `).join('') || '<span style="font-size:13px;color:var(--muted)">Sem dados</span>';
+
+  // ── RT NEWS v1.3 — Panoramas Trabalhista e Industrial ──
+  const _countCat=(d,cat)=>d.filter(n=>getCat(n)===cat).length;
+  const _barRow=(label,count,total,color)=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span style="font-size:12px;font-weight:500;width:160px;flex-shrink:0;">${label}</span>
+      <div style="flex:1;height:8px;background:var(--cream);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;border-radius:4px;width:${total?Math.round(count/total*100):0}%;background:${color};"></div>
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);width:24px;text-align:right;">${count}</span>
+    </div>`;
+
+  // Panorama Trabalhista
+  const ptEl=document.getElementById('dash-panorama-trab');
+  if(ptEl){
+    ptEl.innerHTML=CATS_TRABALHISTA.map(c=>_barRow(c,_countCat(allData,c),allData.length,'#1A2E4A')).join('');
+  }
+
+  // Panorama Industrial
+  const piEl=document.getElementById('dash-panorama-ind');
+  if(piEl){
+    piEl.innerHTML=CATS_INDUSTRIAL.map(c=>_barRow(c,_countCat(allData,c),allData.length,'#1A4A3A')).join('');
+  }
+
+  // Entidades mais citadas
+  const entCount={};
+  allData.forEach(n=>getEntidades(n).forEach(e=>{if(e)entCount[e]=(entCount[e]||0)+1;}));
+  const topEnts=Object.entries(entCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxE=topEnts[0]?topEnts[0][1]:1;
+  const entEl=document.getElementById('dash-entidades');
+  if(entEl){
+    entEl.innerHTML=topEnts.map(([e,c],i)=>`
+      <div class="dash-source-row">
+        <span class="dash-source-rank">#${i+1}</span>
+        <span class="dash-source-name">${e}</span>
+        <div class="dash-source-bar-wrap"><div class="dash-source-bar-fill" style="width:${(c/maxE)*100}%;background:#1A4A3A"></div></div>
+        <span class="dash-source-count">${c}</span>
+      </div>`).join('')||'<span style="font-size:13px;color:var(--muted)">Sem dados</span>';
+  }
+
+  // Temas relacionados mais frequentes
+  const relCount={};
+  allData.forEach(n=>getCatsRel(n).forEach(r=>{if(r)relCount[r]=(relCount[r]||0)+1;}));
+  const topRel=Object.entries(relCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxR=topRel[0]?topRel[0][1]:1;
+  const relEl=document.getElementById('dash-temas-rel');
+  if(relEl){
+    relEl.innerHTML=topRel.map(([r,c],i)=>`
+      <div class="dash-source-row">
+        <span class="dash-source-rank">#${i+1}</span>
+        <span class="dash-source-name">${r}</span>
+        <div class="dash-source-bar-wrap"><div class="dash-source-bar-fill" style="width:${(c/maxR)*100}%"></div></div>
+        <span class="dash-source-count">${c}</span>
+      </div>`).join('')||'<span style="font-size:13px;color:var(--muted)">Sem dados</span>';
+  }
 
   // ── Chart: Evolução semanal ──
   _destroyChart('score');
