@@ -1248,6 +1248,14 @@ function showTab(tab) {
   });
   if (tab==='list')     renderAdminList();
   if (tab==='archived') renderArchivedList();
+  // Inicializa multi-selects se ainda não foram renderizados
+  if (tab==='new') {
+    const optsEl = document.getElementById('f-cats-rel-opts');
+    if (optsEl && optsEl.innerHTML.trim()==='') {
+      _renderMultiSelect('f-cats-rel-opts','f-cats-rel-wrap','f-cats-rel', TODAS_CATS, []);
+      _renderMultiSelect('f-ents-opts','f-ents-wrap','f-ents', ENTIDADES_LIST, []);
+    }
+  }
 }
 
 async function renderAdminList() {
@@ -1293,40 +1301,66 @@ function _renderMultiSelect(optsId, wrapId, hiddenId, lista, selecionados) {
   const hidden = document.getElementById(hiddenId);
   const opts   = document.getElementById(optsId);
   if (!wrap||!hidden||!opts) return;
-  let sel = [...selecionados];
+  let sel = selecionados.filter(Boolean);
   hidden.value = sel.join(',');
-  wrap.innerHTML = sel.length
-    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemove(this,'${wrapId}','${hiddenId}','${optsId}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
-    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
+  _msRefreshWrap(wrap, sel, hiddenId, wrapId, optsId);
   opts.innerHTML = lista.map(item => {
     const checked = sel.includes(item);
-    return `<button type="button" data-val="${item}" style="font-size:10px;padding:2px 10px;border-radius:20px;border:1px solid var(--border);background:${checked?'var(--ink)':'#fff'};color:${checked?'#fff':'var(--muted)'};cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:3px;" onclick="_msToggle(this,'${wrapId}','${hiddenId}')">${item}</button>`;
+    return '<button type="button" data-val="' + item + '" ' +
+      'style="font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);' +
+      'background:' + (checked ? 'var(--ink)' : '#fff') + ';' +
+      'color:' + (checked ? '#fff' : 'var(--muted)') + ';' +
+      'cursor:pointer;font-family:\'DM Sans\',sans-serif;margin-bottom:3px;transition:all .15s;" ' +
+      'onclick="_msToggle(this,\'' + hiddenId + '\',\'' + wrapId + '\',\'' + optsId + '\')">' + item + '</button>';
   }).join('');
 }
 
-function _msToggle(btn, wrapId, hiddenId) {
-  const hidden = document.getElementById(hiddenId);
-  let sel = hidden.value ? hidden.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  const item = btn.dataset.val;
-  if (sel.includes(item)) { sel = sel.filter(s=>s!==item); btn.style.background='#fff'; btn.style.color='var(--muted)'; }
-  else { sel.push(item); btn.style.background='var(--ink)'; btn.style.color='#fff'; }
+function _msRefreshWrap(wrap, sel, hiddenId, wrapId, optsId) {
+  if (!wrap) return;
+  if (!sel.length) {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>';
+    return;
+  }
+  wrap.innerHTML = sel.map(function(s) {
+    return '<span data-ms-item="' + s + '" ' +
+      'style="background:var(--accent-light);color:var(--accent);font-size:10px;' +
+      'font-family:\'DM Mono\',monospace;padding:2px 8px;border-radius:10px;' +
+      'cursor:pointer;line-height:1.8;display:inline-block;margin:2px;" ' +
+      'onclick="_msRemoveBySpan(this,\'' + hiddenId + '\',\'' + wrapId + '\',\'' + optsId + '\')">✕ ' + s + '</span>';
+  }).join('');
+}
+
+function _msToggle(btn, hiddenId, wrapId, optsId) {
+  var hidden = document.getElementById(hiddenId);
+  var wrap   = document.getElementById(wrapId);
+  if (!hidden||!wrap) return;
+  var item = btn.dataset.val;
+  var sel  = hidden.value ? hidden.value.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
+  if (sel.indexOf(item) >= 0) {
+    sel = sel.filter(function(s){return s !== item;});
+    btn.style.background = '#fff'; btn.style.color = 'var(--muted)';
+  } else {
+    sel.push(item);
+    btn.style.background = 'var(--ink)'; btn.style.color = '#fff';
+  }
   hidden.value = sel.join(',');
-  const wrap = document.getElementById(wrapId);
-  wrap.innerHTML = sel.length
-    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemoveByVal('${wrapId}','${hiddenId}','${btn.closest('[id]')?'':''}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
-    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
+  _msRefreshWrap(wrap, sel, hiddenId, wrapId, optsId);
+}
+
+function _msRemoveBySpan(span, hiddenId, wrapId, optsId) {
+  var hidden = document.getElementById(hiddenId);
+  var wrap   = document.getElementById(wrapId);
+  var opts   = document.getElementById(optsId);
+  if (!hidden||!wrap) return;
+  var item = span.dataset.msItem;
+  var sel  = hidden.value ? hidden.value.split(',').map(function(s){return s.trim();}).filter(function(s){return s && s!==item;}) : [];
+  hidden.value = sel.join(',');
+  if (opts) opts.querySelectorAll('button').forEach(function(b){ if(b.dataset.val===item){b.style.background='#fff';b.style.color='var(--muted)';} });
+  _msRefreshWrap(wrap, sel, hiddenId, wrapId, optsId);
 }
 
 function _msRemove(el, wrapId, hiddenId, optsId, item) {
-  const hidden = document.getElementById(hiddenId);
-  let sel = hidden.value ? hidden.value.split(',').map(s=>s.trim()).filter(s=>s && s!==item) : [];
-  hidden.value = sel.join(',');
-  const opts = document.getElementById(optsId);
-  if (opts) opts.querySelectorAll('button').forEach(b=>{ if(b.dataset.val===item){b.style.background='#fff';b.style.color='var(--muted)';} });
-  const wrap = document.getElementById(wrapId);
-  wrap.innerHTML = sel.length
-    ? sel.map(s=>`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;cursor:pointer;" onclick="_msRemove(this,'${wrapId}','${hiddenId}','${optsId}',\'${s.replace(/'/g,"\\'")}\')">x ${s}</span>`).join('')
-    : `<span style="font-size:12px;color:var(--muted);padding:2px;">Nenhuma selecionada</span>`;
+  _msRemoveBySpan({dataset:{msItem:item}}, hiddenId, wrapId, optsId);
 }
 
 function editNews(id) {
@@ -1602,16 +1636,27 @@ function exportPDF(id) {
     doc.text('Emitido em ' + hojeISO, ML+4, 44);
 
     if (n.alerta === 'sim') {
+      // Mede os textos para calcular a largura exata da caixa
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+      const txt1 = '\u26A0  ALERTA RT NEWS';
+      const w1   = doc.getTextWidth(txt1);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      const txt2 = 'Acao imediata recomendada';
+      const w2   = doc.getTextWidth(txt2);
+      const boxW = Math.max(w1, w2) + 10; // padding interno de 5mm cada lado
+      const boxX = W - ML - boxW;         // alinha à margem direita
+      const boxY = 13;
+
       fc(red);
-      doc.roundedRect(W-ML-42, 15, 42, 16, 2, 2, 'F');
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.5);
+      doc.roundedRect(boxX, boxY, boxW, 18, 2, 2, 'F');
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
       tc(white);
-      doc.text('\u26A0  ALERTA RT NEWS', W-ML-39, 22);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7);
+      doc.text(txt1, boxX + 5, boxY + 7);
+
+      doc.setFont('helvetica','normal'); doc.setFontSize(7);
       tcRaw(255,180,180);
-      doc.text('A\u00E7\u00E3o imediata recomendada', W-ML-39, 28);
+      doc.text(txt2, boxX + 5, boxY + 13.5);
     }
 
     y = 62;
