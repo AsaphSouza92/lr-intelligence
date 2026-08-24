@@ -1138,7 +1138,6 @@ function openDetail(id) {
   // Template 2 — Estratégia Industrial usa campos alternativos
   const conteudoSecoes = ind ? `
     ${n.resumo?`<div class="msec"><div class="msec-ttl">Resumo Executivo</div><div class="mtext">${n.resumo}</div></div>`:''}
-    ${n.justificativa?`<div class="msec"><div class="msec-ttl">Por que isso importa?</div><div class="mtext">${n.justificativa}</div></div>`:''}
     ${n.impactos?`<div class="msec"><div class="msec-ttl">Possíveis Impactos</div><div class="mtext">${n.impactos}</div></div>`:''}
     ${n.oportunidades?`<div class="msec"><div class="msec-ttl">Oportunidades</div><div class="mtext">${n.oportunidades}</div></div>`:''}
     ${n.risco?`<div class="mrisk"><strong>⚠️ Pontos de Atenção:</strong> ${n.risco}</div>`:''}
